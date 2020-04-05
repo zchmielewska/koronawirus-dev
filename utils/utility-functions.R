@@ -21,9 +21,9 @@ checkNewData <- function(data) {
   
   # if the data is from yesterday; check if new exists
   last.file <- drop_dir("ECDC") %>% select(name) %>% arrange(desc(name)) %>% slice(1) %>% pull()
-  if(!(as.Date(gsub(".csv", "", last.file)) == Sys.Date())) {
+  if(as.Date(gsub(".csv", "", last.file)) < Sys.Date()) {
     base.url <- "https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-"
-    new.exists <- !(testit::has_error(readxl::read_excel(paste0(base.url, Sys.Date(), ".xlsx"))))
+    new.exists <- !(testit::has_error(rio::import(paste0(base.url, Sys.Date(), ".xlsx"))))
     if(new.exists) {
       ecdc.data <- read.csv("https://opendata.ecdc.europa.eu/covid19/casedistribution/csv", stringsAsFactors = FALSE)
       ecdc.filename <- paste0(Sys.Date(), ".csv")

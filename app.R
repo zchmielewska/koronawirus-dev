@@ -69,6 +69,9 @@ body <- dashboardBody(
         tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
     ),
     tabItems(
+
+        # Poland UI ---------------------------------------------------------------
+        
         tabItem(
             tabName = "poland",
             fluidRow(
@@ -94,10 +97,15 @@ body <- dashboardBody(
                         label = "Przebieg czasu", choices = settings$x.vars$FullName,
                         selected = "Dzień epidemii"
                     ),
+                    checkboxInput("polandLogScale", "Skala logarytmiczna", value = FALSE),
+                    hr(),
                     textOutput("datestamp")
                 )
             )                    
         ),
+
+        # World UI ----------------------------------------------------------------
+        
         tabItem(
             tabName = "world",
             fluidRow(
@@ -114,7 +122,8 @@ body <- dashboardBody(
                         inputId = "worldYVar",
                         label = "Zmienna", choices = settings$y.vars$FullName,
                         selected = "Całkowita liczba zakażeń"
-                    )
+                    ),
+                    checkboxInput("worldLogScale", "Skala logarytmiczna", value = FALSE)
                 )
             )
         ),
@@ -243,15 +252,22 @@ server <- function(input, output, session) {
         y.var <- input$polandYVar # y.var <- "Całkowita liczba zakażeń"
         y     <- settings$y.vars %>% filter(FullName == y.var) %>% select(ColumnName) %>% pull()
         
-        ggplot(poland.data(), aes_string(x = x, y = y)) +
+        p1 <- ggplot(poland.data(), aes_string(x = x, y = y)) +
             geom_point() +
             geom_line() +
             theme(panel.grid.minor = element_blank()) +
             ggtitle(y.var) +
             xlab(x.var) +
             ylab("")
+        
+        if(input$polandLogScale) {
+            p2 <- p1 + scale_y_continuous(trans='log10')
+        } else {
+            p2 <- p1
+        }
+        
+        p2
     })
-    
     
     output$datestamp <- renderText(
         paste("Dane z dnia:", ecdc.date())
@@ -266,16 +282,23 @@ server <- function(input, output, session) {
         if(length(input$worldCountry) > 0) {
             world.data.plot <- filter(world.data(), Country %in% input$worldCountry)
             
-            ggplot(world.data.plot, aes_string(x = "Date", y = y, color = "Country")) +
+            p1 <- ggplot(world.data.plot, aes_string(x = "Date", y = y, color = "Country")) +
                 geom_point() +
                 geom_line() +
                 ggtitle(y.var) +
                 xlab("") +
                 ylab("")    
         } else {
-            ggplot() +
-                ggtitle(y.var)
+            p1 <- ggplot() + ggtitle(y.var)
         }
+        
+        if(input$worldLogScale) {
+            p2 <- p1 + scale_y_continuous(trans='log10')
+        } else {
+            p2 <- p1
+        }
+        
+        p2
     })
     
     observeEvent(world.data(), {
@@ -283,7 +306,6 @@ server <- function(input, output, session) {
         updateSelectInput(session, "worldCountry", choices = choices, 
                           selected = c("China", "United_States_of_America")) 
     })
-    
 
     # Today page --------------------------------------------------------------
 
