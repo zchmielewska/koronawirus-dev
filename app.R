@@ -53,6 +53,19 @@ getWorldDataTable <- function(world.data, ecdc.date) {
     return(result)
 }
 
+ui <- fluidPage(
+    tags$head(
+        tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+    ),
+    fluidRow(id = "title-bar", h2("koronawirus")),
+    navlistPanel(
+        well = FALSE, widths = c(3, 9),
+        tabPanel("Polska", p("O Polsce")),
+        tabPanel("Świat", p("O Świecie")),
+        tabPanel("Dziś", p("O dzisiejszym dniu"))
+    )
+)
+
 # UI ----------------------------------------------------------------------
 
 sidebar <- dashboardSidebar(
@@ -320,10 +333,10 @@ server <- function(input, output, session) {
 
 # Run application ---------------------------------------------------------
 
-ui <- dashboardPage(
-    dashboardHeader(title = "Koronawirus"),
-    sidebar,
-    body   
-)
+# ui <- dashboardPage(
+#     dashboardHeader(title = "Koronawirus"),
+#     sidebar,
+#     body   
+# )
 
 shinyApp(ui = ui, server = server)
